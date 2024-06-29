@@ -15,7 +15,7 @@ type Boundary struct {
 func (b *Boundary) Draw(screen *ebiten.Image) {
 	white := color.RGBA{255, 255, 255, 255}
 
-	ebitenutil.DrawLine(screen, b.A.X, b.A.X, b.B.X, b.B.Y, white)
+	ebitenutil.DrawLine(screen, b.A.X, b.A.Y, b.B.X, b.B.Y, white)
 }
 
 func NewBoundary(A *Vector, B *Vector) *Boundary {
