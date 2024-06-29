@@ -13,6 +13,10 @@ func (v *Vector) Normalize() {
 	v.Y = v.Y / magnitude
 }
 
+func (v *Vector) distanceFrom(s *Vector) float64 {
+	return math.Sqrt(math.Pow(s.X-v.X, 2) + math.Pow(s.Y-v.Y, 2))
+}
+
 func NewVector(x float64, y float64) *Vector {
 	return &Vector{
 		X: x,

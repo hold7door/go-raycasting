@@ -2,6 +2,7 @@ package game
 
 import (
 	"image/color"
+	"math"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -12,10 +13,9 @@ type Ray struct {
 	dir *Vector
 }
 
-func (r *Ray) lookAt(mouseX float64, mouseY float64) {
-	r.dir.X = mouseX - r.X.X
-	r.dir.Y = mouseY - r.X.Y
-	r.dir.Normalize()
+func (r *Ray) setPos(x float64, y float64) {
+	r.X.X = x
+	r.X.Y = y
 }
 
 func (r *Ray) Draw(screen *ebiten.Image) {
@@ -56,7 +56,12 @@ func (r *Ray) Cast(boundary *Boundary) *Vector {
 
 }
 
-func NewRay(X *Vector, dir *Vector) *Ray {
+func NewRay(X *Vector, angle float64) *Ray {
+	dir := &Vector{
+		X: math.Cos(angle),
+		Y: math.Sin(angle),
+	}
+
 	r := &Ray{
 		X:   X,
 		dir: dir,

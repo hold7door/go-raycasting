@@ -2,6 +2,8 @@ package game
 
 import (
 	"image/color"
+	"math"
+	"math/rand"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -9,20 +11,18 @@ import (
 
 type Game struct {
 	boundary []*Boundary
-	ray      []*Ray
+	particle *Particle
 }
 
 const (
-	ScreenWidth  = 800
-	ScreenHeight = 600
+	ScreenWidth  = 1280
+	ScreenHeight = 768
 )
 
 func (g *Game) Update() error {
 	mouseX, mouseY := ebiten.CursorPosition()
 
-	for _, r := range g.ray {
-		r.lookAt(float64(mouseX), float64(mouseY))
-	}
+	g.particle.setPos(float64(mouseX), float64(mouseY))
 
 	return nil
 }
@@ -32,19 +32,28 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	for _, b := range g.boundary {
 		b.Draw(screen)
 	}
-	for _, r := range g.ray {
-		r.Draw(screen)
-	}
+	g.particle.Draw(screen)
 
-	for _, r := range g.ray {
+	for _, r := range g.particle.rays {
+		minDis := math.Inf(0)
+		var minpt *Vector
+		minpt = nil
 		for _, b := range g.boundary {
-			pt := r.Cast(b)
-			if pt != nil {
-				white := color.RGBA{255, 255, 255, 255}
-				ebitenutil.DrawCircle(screen, pt.X, pt.Y, 1, white)
+			insc := r.Cast(b)
+			if insc != nil {
+				dis := r.X.distanceFrom(insc)
+				if dis <= minDis {
+					minDis = dis
+					minpt = insc
+				}
 			}
 		}
+		if minpt != nil {
+			white := color.RGBA{255, 255, 255, 255}
+			ebitenutil.DrawLine(screen, r.X.X, r.X.Y, minpt.X, minpt.Y, white)
+		}
 	}
+
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
@@ -52,24 +61,32 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 }
 
 func NewGame() *Game {
-	A := NewVector(300, 100)
-
-	B := NewVector(300, 200)
-
-	b := NewBoundary(A, B)
-
-	X := NewVector(100, 150)
-
-	dir := NewVector(1, 0)
-
-	ray := NewRay(
-		X, dir,
-	)
-
 	g := &Game{}
 
-	g.boundary = append(g.boundary, b)
-	g.ray = append(g.ray, ray)
+	g.particle = NewParticle()
+
+	b1 := NewBoundary(&Vector{X: 0, Y: 0}, &Vector{X: ScreenWidth, Y: 0})
+	b2 := NewBoundary(&Vector{X: 0, Y: 0}, &Vector{X: 0, Y: ScreenHeight})
+	b3 := NewBoundary(&Vector{X: ScreenWidth, Y: 0}, &Vector{X: ScreenWidth, Y: ScreenHeight})
+	b4 := NewBoundary(&Vector{X: ScreenWidth, Y: ScreenHeight}, &Vector{X: 0, Y: ScreenHeight})
+
+	g.boundary = append(g.boundary, b1)
+	g.boundary = append(g.boundary, b2)
+	g.boundary = append(g.boundary, b3)
+	g.boundary = append(g.boundary, b4)
+
+	for i := 0; i < 10; i++ {
+		x1 := float64(rand.Intn(ScreenWidth + 1))
+		y1 := float64(rand.Intn(ScreenHeight + 1))
+
+		disx := float64(rand.Intn(ScreenWidth))
+		disy := float64(rand.Intn(ScreenHeight))
+
+		x2 := x1 + disx
+		y2 := y1 + disy
+
+		g.boundary = append(g.boundary, NewBoundary(NewVector(x1, y1), NewVector(x2, y2)))
+	}
 
 	return g
 }
